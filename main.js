@@ -2,6 +2,8 @@ import * as THREE from "three";
 
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 let rotacionAcumulada;
+let vecesPresionadaU = 0;
+
 const start = Date.now();
 let uPressed = false;
 let camera, scene, renderer;
@@ -69,7 +71,7 @@ function init(){
 
     const ambientLight = new THREE.AmbientLight(
         0xffffff,
-        0.1
+        5
     )
     scene.add(ambientLight);
 
@@ -94,7 +96,8 @@ function init(){
 
 
     //Color//Column//Row
-    const pos = 1.5;
+    const pos = 1.05;
+
 
 
 
@@ -140,6 +143,12 @@ function init(){
     grc = generarCubo(-pos,0,pos);
     grd = generarCubo(-pos,-pos,pos);
 
+
+
+
+
+
+
     document.addEventListener('keydown', (event) => {
         if ((event.key === 'u' || event.key === 'U')) {
             rotacionAcumulada = 0;
@@ -155,9 +164,14 @@ function init(){
 
     document.body.appendChild( renderer.domElement );
     window.addEventListener( 'resize', onWindowResize , false);
+
+
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'u') {
+            vecesPresionadaU++;
+        }
+    });
 }
-
-
 
 
 
@@ -168,16 +182,32 @@ function rotacion(){
         rotacionAcumulada += 0.05;
         requestAnimationFrame(() => rotacion());
     } else {
-        wcc.rotation.x = Math.PI/2
+        wcc.rotation.x = (vecesPresionadaU % 4)*Math.PI/2
         rotacionAcumulada = 0;
     }
 }
-function generarCubo(posX, posY, posZ){
+function generarCubo(posX, posY, posZ, colorRubik){
     const geometry = new THREE.BoxGeometry( 1, 1, 1 );
-    const material = new THREE.MeshPhongMaterial( { flatShading: true, color: 0xffffff });
+    const white = 0xffffff;
+    const red = 0xb71234;
+    const yellow = 0xffd500;
+    const orange = 0xff5800;
+    const blue = 0x0046ad;
+    const green = 0x009b48;
+    const material = [
+        new THREE.MeshLambertMaterial({color:orange}),
+        new THREE.MeshLambertMaterial({color:red}),
+        new THREE.MeshLambertMaterial({color:white}),
+        new THREE.MeshLambertMaterial({color:yellow}),
+        new THREE.MeshLambertMaterial({color:blue}),
+        new THREE.MeshLambertMaterial({color:green})
+        ];
+
+
     const cube = new THREE.Mesh( geometry, material );
     cube.position.set(posX,posY,posZ);
     scene.add( cube );
+
     return cube;
 }
 
