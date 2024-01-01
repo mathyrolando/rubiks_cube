@@ -19,6 +19,28 @@ function inicializarBtnMezclar(){
     });
 }
 
+function inicializarBotonesControl(){
+    document.getElementById('btnUp').addEventListener('click', function() {
+        enviarTecla('u');
+    });
+    document.getElementById('btnDown').addEventListener('click', function() {
+        enviarTecla('d');
+    });
+    document.getElementById('btnFront').addEventListener('click', function() {
+        enviarTecla('f');
+    });
+    document.getElementById('btnBack').addEventListener('click', function() {
+        enviarTecla('b');
+    });
+    document.getElementById('btnRight').addEventListener('click', function() {
+        enviarTecla('r');
+    });
+    document.getElementById('btnLeft').addEventListener('click', function() {
+        enviarTecla('l');
+    });
+
+}
+
 
 function init(){
     const WIDTH = window.innerWidth;
@@ -63,6 +85,7 @@ function init(){
     scene.add(pointLight2);
 
     inicializarBtnMezclar();
+    inicializarBotonesControl();
 
     const pos = 1.05;
 
@@ -96,17 +119,7 @@ function init(){
     cubos.push(rbu, rb, rbd, ru, r, rd, rfu, rf, rfd, bu, b, bd, u, d, fu, f, fd, lbu, lb, lbd, lu, l, ld, lfu, lf, lfd);
 
     document.addEventListener('keydown', (event) => {
-        const letras = ['u', 'U', 'd', 'D', 'l', 'L', 'r', 'R', 'f', 'F', 'b', 'B'];
-        if (letras.includes(event.key)){
-            if (!isRotating){
-                teclas(event.key);
-            } else{
-                actionQueue.push(event.key);
-            }
-
-        }
-
-
+        enviarTecla(event.key);
     })
 
 
@@ -119,6 +132,26 @@ function init(){
     window.addEventListener( 'resize', onWindowResize , false);
 }
 
+function enviarTecla(modo){
+    const chkAntihorario = document.getElementById('chkAntihorario');
+    if (chkAntihorario.checked){
+        if (modo === modo.toUpperCase()){
+            modo = modo.toLowerCase();
+        }else{
+            modo = modo.toUpperCase();
+        }
+    }
+
+    const letras = ['u', 'U', 'd', 'D', 'l', 'L', 'r', 'R', 'f', 'F', 'b', 'B'];
+    if (letras.includes(modo)){
+        if (!isRotating){
+            teclas(modo);
+        } else{
+            actionQueue.push(modo);
+        }
+
+    }
+}
 
 function teclas(modo){
     concha = 0;
@@ -214,7 +247,7 @@ function teclasQuick(modo){
 function mezclar(){
     const letras = ['u', 'U', 'd', 'D', 'l', 'L', 'r', 'R', 'f', 'F', 'b', 'B'];
     for (let i = 0; i < 20; i++){
-        const randomElement = letras[Math.floor(Math.random() * letras.length)];
+        const randomElement = elegirRandom(letras);
 
         if (!isRotating){
             teclasQuick(randomElement);
@@ -222,6 +255,28 @@ function mezclar(){
             actionQueue.push(randomElement);
         }
     }
+}
+let ultimaLetra = '';
+function elegirRandom(letras){
+    let randomElement = '';
+    do {
+        randomElement = letras[Math.floor(Math.random() * letras.length)];
+        if (ultimaLetra !== '') {
+            if (ultimaLetra === ultimaLetra.toUpperCase()) {
+                const letraInvalida = ultimaLetra.toLowerCase();
+                if (randomElement === letraInvalida) {
+                    randomElement = '';
+                }
+            } else {
+                const letraInvalida = ultimaLetra.toUpperCase();
+                if (randomElement === letraInvalida) {
+                    randomElement = '';
+                }
+            }
+        }
+    } while (randomElement === '')
+    ultimaLetra = randomElement;
+    return randomElement;
 }
 
 

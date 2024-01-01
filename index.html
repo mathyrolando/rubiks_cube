@@ -8,7 +8,7 @@
 
         .shuffle-design {
             position: fixed; /* Fijar posición */
-            top: 260px; /* 20px desde la parte inferior */
+            top: calc(50vh - 45px); /* 20px desde la parte inferior */
             left: 150px; /* 20px desde la parte derecha */
             width: 90px; /* Diámetro del botón */
             height: 90px; /* Diámetro del botón */
@@ -52,12 +52,124 @@
             left: 50%; /* Posiciona la imagen en el centro horizontalmente */
             transform: translate(-50%, -50%); /* Centra la imagen */
         }
+        .controles{
+            position: relative; /* Fijar posición */
+            display: block;
+            width: 46px; /* Diámetro del botón */
+            height: 46px; /* Diámetro del botón */
+            border-radius: 50%; /* Hacerlo circular */
+            background-color: white; /* Color de fondo blanco */
+            border: none; /* Sin borde */
+            cursor: pointer; /* Cambia el cursor al pasar sobre él */
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1); /* Sombra suave */
+            margin-bottom: 6px;
+        }
+        .panel-controles{
+            position: fixed;
+            right: 150px;
+            top: calc(50vh - 163px);
+        }
+        .estilo-letra{
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 80px;
+            height: 34px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius:34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            color: #000; /* Establece el color de la "X" */
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: #2196F3;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(46px);
+        }
+
+        /* Estilo visual para cuando está activado */
+        .slider.round {
+            border-radius: 34px;
+        }
+
+        .slider.round:before {
+            border-radius: 50%;
+        }
+        .antihorario{
+            display: block;
+            margin-top: 20px;
+            font-weight: bold;
+            font-size: 15px;
+            font-family: Arial,sans-serif;
+        }
+
     </style>
 </head>
 <body>
 <button id="btnMezclar" class="shuffle-design">
     <img src="./public/shuffle.svg" title="Mezclar" alt="Mezclar">
 </button>
+<div class="panel-controles">
+    <button id="btnUp" class="controles">
+        <span class="estilo-letra">U</span>
+    </button>
+    <button id="btnDown" class="controles">
+        <span class="estilo-letra">D</span>
+    </button>
+    <button id="btnFront" class="controles">
+        <span class="estilo-letra">F</span>
+    </button>
+    <button id="btnBack" class="controles">
+        <span class="estilo-letra">B</span>
+    </button>
+    <button id="btnRight" class="controles">
+        <span class="estilo-letra">R</span>
+    </button>
+    <button id="btnLeft" class="controles">
+        <span class="estilo-letra">L</span>
+    </button>
+    <span class="antihorario">antihorario</span>
+    <label class="switch">
+        <input type="checkbox" id="chkAntihorario">
+            <span class="slider"></span>
+    </label>
+</div>
+
+
+
 <button id="myButton" class="circular-button">
     <img src="./public/ic_code_black_24dp.svg" alt="Imagen personalizada">
 </button>
