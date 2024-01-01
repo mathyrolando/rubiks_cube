@@ -1,68 +1,24 @@
 import * as THREE from "three";
 
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-let rotacionAcumuladaR;
-let rotacionAcumuladaL;
-let rotacionAcumuladaU;
 
-let vecesPresionadaR = 0;
-let vecesPresionadaL = 0;
-let vecesPresionadaU = 0;
-
-
-
-const up    = []
-const down  = []
-const right = []
-const left  = []
-const front = []
-const back  = []
-
-
-const start = Date.now();
-let uPressed = false;
 let camera, scene, renderer;
 let controls;
-let bu
-let b
-let bd
-let u
 
-let d
-let fu
-let f
-
-let fd
-let lbu
-let lb
-
-
-let rbu;
-let rb;
-let rbd;
-
-let ru;
-let r;
-let rd;
-
-let rfu;
-let rf;
-let rfd;
-
-
-
-let lbd
-let lu
-let l
-
-let ld
-let lfu
-let lf
-
-let lfd
+let concha;
+const cubos = [];
+const actionQueue = []
+let isRotating = false;
 
 init();
 animate();
+
+function inicializarBtnMezclar(){
+    document.getElementById('btnMezclar').addEventListener('click', function() {
+        mezclar();
+    });
+}
+
 
 function init(){
     const WIDTH = window.innerWidth;
@@ -73,10 +29,10 @@ function init(){
         1,
         1000
     );
-    camera.position.set(0,15,15);
+    camera.position.set(3,3,5);
 
     scene = new THREE.Scene();
-    scene.background = new THREE.Color(0,0,0);
+    scene.background = new THREE.Color(0xDFDFDF);
 
     renderer = new THREE.WebGLRenderer();
     renderer.setSize( WIDTH, HEIGHT );
@@ -106,86 +62,52 @@ function init(){
     pointLight2.position.set(-15,15,15);
     scene.add(pointLight2);
 
+    inicializarBtnMezclar();
 
-
-    //Color//Column//Row
     const pos = 1.05;
 
-    //Right View:
+    const rbu = generarCubo(pos,pos,-pos);
+    const rb  = generarCubo(pos,0,-pos);
+    const rbd = generarCubo(pos,-pos,-pos);
+    const ru  = generarCubo(pos,pos,0);
+    const r   = generarCubo(pos,0,0);
+    const rd  = generarCubo(pos,-pos,0);
+    const rfu = generarCubo(pos,pos,pos);
+    const rf  = generarCubo(pos,0,pos);
+    const rfd = generarCubo(pos,-pos,pos);
+    const bu  = generarCubo(0,pos,-pos);
+    const b   = generarCubo(0,0,-pos);
+    const bd  = generarCubo(0,-pos,-pos);
+    const u   = generarCubo(0,pos,0);
+    const d   = generarCubo(0,-pos,0);
+    const fu  = generarCubo(0,pos,pos);
+    const f   = generarCubo(0,0,pos);
+    const fd  = generarCubo(0,-pos,pos);
+    const lbu = generarCubo(-pos,pos,-pos);
+    const lb  = generarCubo(-pos,0,-pos);
+    const lbd = generarCubo(-pos,-pos,-pos);
+    const lu  = generarCubo(-pos,pos,0);
+    const l   = generarCubo(-pos,0,0);
+    const ld  = generarCubo(-pos,-pos,0);
+    const lfu = generarCubo(-pos,pos,pos);
+    const lf  = generarCubo(-pos,0,pos);
+    const lfd = generarCubo(-pos,-pos,pos);
 
-    // rfu // ru // rbu
-    // rf  // r  // rb
-    // rfd // rd // rbd
-
-
-    rbu = generarCubo(pos,pos,-pos);
-    rb  = generarCubo(pos,0,-pos);
-    rbd = generarCubo(pos,-pos,-pos);
-    ru  = generarCubo(pos,pos,0);
-
-    r   = generarCubo(pos,0,0);
-
-    rd  = generarCubo(pos,-pos,0);
-    rfu = generarCubo(pos,pos,pos);
-    rf  = generarCubo(pos,0,pos);
-    rfd = generarCubo(pos,-pos,pos);
-
-
-
-
-    bu  = generarCubo(0,pos,-pos);
-    b   = generarCubo(0,0,-pos);
-    bd  = generarCubo(0,-pos,-pos);
-    u   = generarCubo(0,pos,0);
-    d   = generarCubo(0,-pos,0);
-    fu  = generarCubo(0,pos,pos);
-    f   = generarCubo(0,0,pos);
-    fd  = generarCubo(0,-pos,pos);
-
-    lbu = generarCubo(-pos,pos,-pos);
-    lb  = generarCubo(-pos,0,-pos);
-    lbd = generarCubo(-pos,-pos,-pos);
-    lu  = generarCubo(-pos,pos,0);
-    l   = generarCubo(-pos,0,0);
-    ld  = generarCubo(-pos,-pos,0);
-    lfu = generarCubo(-pos,pos,pos);
-    lf  = generarCubo(-pos,0,pos);
-    lfd = generarCubo(-pos,-pos,pos);
-
-    up.push(rbu, ru, lfu, lbu, fu, u, bu, lu, rfu);
-    down.push(rbd, rd, rfd, bd, d, fd, lbd, ld, lfd);
-    right.push(rbu, rb, rbd, ru, r, rd, rfu, rf, rfd);
-    left.push(lbu, lb, lbd, lu, l, ld, lfu, lf, lfd);
-    front.push(rfu, rf, rfd, fu, f, fd, lfu, lf, lfd);
-    back.push(rbu, rb, rbd, bu, b, bd, lbu, lb, lbd);
-
+    cubos.push(rbu, rb, rbd, ru, r, rd, rfu, rf, rfd, bu, b, bd, u, d, fu, f, fd, lbu, lb, lbd, lu, l, ld, lfu, lf, lfd);
 
     document.addEventListener('keydown', (event) => {
-        if ((event.key === 'u' || event.key === 'U')) {
-            rotacionAcumuladaU = 0;
-            rotacion(up);  // Llama a la función que realiza la rotación
+        const letras = ['u', 'U', 'd', 'D', 'l', 'L', 'r', 'R', 'f', 'F', 'b', 'B'];
+        if (letras.includes(event.key)){
+            if (!isRotating){
+                teclas(event.key);
+            } else{
+                actionQueue.push(event.key);
+            }
+
         }
-        if ((event.key === 'd' || event.key === 'D')) {
-            rotacionAcumuladaR = 0;
-            rotacion(down);  // Llama a la función que realiza la rotación
-        }
-        if ((event.key === 'l' || event.key === 'L')) {
-            rotacionAcumuladaL = 0;
-            rotacion(left);  // Llama a la función que realiza la rotación
-        }
-        if ((event.key === 'r' || event.key === 'R')) {
-            rotacionAcumuladaR = 0;
-            rotacion(right);  // Llama a la función que realiza la rotación
-        }
-        if ((event.key === 'f' || event.key === 'F')) {
-            rotacionAcumuladaR = 0;
-            rotacion(front);  // Llama a la función que realiza la rotación
-        }
-        if ((event.key === 'b' || event.key === 'B')) {
-            rotacionAcumuladaR = 0;
-            rotacion(back);  // Llama a la función que realiza la rotación
-        }
-    });
+
+
+    })
 
 
     controls = new OrbitControls( camera, renderer.domElement );
@@ -195,60 +117,113 @@ function init(){
 
     document.body.appendChild( renderer.domElement );
     window.addEventListener( 'resize', onWindowResize , false);
-
-
-    document.addEventListener('keydown', function(event) {
-        if (event.key === 'r') {
-            vecesPresionadaR++;
-        }
-        if (event.key === 'l') {
-            vecesPresionadaL++;
-        }
-        if (event.key === 'u') {
-            vecesPresionadaU++;
-        }
-    });
 }
 
 
-/*
-function rotacion(centro){
-
-    centro.add(rbu);
-    centro.add(rb);
-    centro.add(rbd);
-    centro.add(ru);
-    centro.add(rd);
-    centro.add(rfu);
-    centro.add(rf);
-    centro.add(rfd);
-
-    if (rotacionAcumuladaR < Math.PI/2){
-        centro.rotation.x += 0.05;
-        rotacionAcumuladaR += 0.05;
-        requestAnimationFrame(() => rotacion(centro));
-    } else {
-        centro.rotation.x = (vecesPresionadaR % 4)*Math.PI/2
-        rotacionAcumuladaR = 0;
-        let pos = rbu.position.clone();
-        let rot = rbu.rotation.clone();
-        centro.clear();
-        scene.add(
-            rbu,
-            rb,
-            rbd,
-            ru,
-            rd,
-            rfu,
-            rf,
-            rfd
-        )
-        rbu.position = pos;
-        rbu.rotation = rot;
-
+function teclas(modo){
+    concha = 0;
+    if (isRotating) return;
+    isRotating = true;
+    switch (modo){
+        case 'u':
+            rotateUp(getUp());
+            break;
+        case 'd':
+            rotateDown(getDown());
+            break;
+        case 'l':
+            rotateLeft(getLeft());
+            break;
+        case 'r':
+            console.log("llamo a rotateRight")
+            rotateRight(getRight());
+            console.log("sigo en rotateright")
+            break;
+        case 'f':
+            rotateFront(getFront());
+            break;
+        case 'b':
+            rotateBack(getBack());
+            break;
+        case 'U':
+            rotateDown(getUp());
+            break;
+        case 'D':
+            rotateUp(getDown());
+            break;
+        case 'L':
+            rotateRight(getLeft());
+            break;
+        case 'R':
+            rotateLeft(getRight());
+            break;
+        case 'F':
+            rotateBack(getFront());
+            break;
+        case 'B':
+            rotateFront(getBack());
+            break;
     }
 }
- */
+
+function teclasQuick(modo){
+    concha = 0;
+    if (isRotating) return;
+    isRotating = true;
+    switch (modo){
+        case 'u':
+            rotateUpQuick(getUp());
+            break;
+        case 'd':
+            rotateDownQuick(getDown());
+            break;
+        case 'l':
+            rotateLeftQuick(getLeft());
+            break;
+        case 'r':
+            console.log("llamo a rotateRight")
+            rotateRightQuick(getRight());
+            console.log("sigo en rotateright")
+            break;
+        case 'f':
+            rotateFrontQuick(getFront());
+            break;
+        case 'b':
+            rotateBackQuick(getBack());
+            break;
+        case 'U':
+            rotateDownQuick(getUp());
+            break;
+        case 'D':
+            rotateUpQuick(getDown());
+            break;
+        case 'L':
+            rotateRightQuick(getLeft());
+            break;
+        case 'R':
+            rotateLeftQuick(getRight());
+            break;
+        case 'F':
+            rotateBackQuick(getFront());
+            break;
+        case 'B':
+            rotateFrontQuick(getBack());
+            break;
+    }
+}
+function mezclar(){
+    const letras = ['u', 'U', 'd', 'D', 'l', 'L', 'r', 'R', 'f', 'F', 'b', 'B'];
+    for (let i = 0; i < 20; i++){
+        const randomElement = letras[Math.floor(Math.random() * letras.length)];
+
+        if (!isRotating){
+            teclasQuick(randomElement);
+        } else{
+            actionQueue.push(randomElement);
+        }
+    }
+}
+
 
 function generarCubo(posX, posY, posZ){
     const geometry = new THREE.BoxGeometry( 1, 1, 1 );
@@ -270,211 +245,326 @@ function generarCubo(posX, posY, posZ){
 
     const cube = new THREE.Mesh( geometry, material );
     cube.position.set(posX,posY,posZ);
+
+    const edges = new THREE.EdgesGeometry(geometry);
+    const lineMaterial = new THREE.MeshBasicMaterial({ color: 0x000000}); // Establece el color y el grosor de las aristas
+    const edgesLines = new THREE.LineSegments(edges, lineMaterial);
+    const edgeVertices = edgesLines.geometry.attributes.position.array;
+    const thickness = 0.05; // Define el grosor de las aristas. Ajusta este valor según tus necesidades.
+
+    // Crear cilindros delgados para cada arista
+    for (let i = 0; i < edgeVertices.length; i += 6) {
+        const startPoint = new THREE.Vector3(edgeVertices[i], edgeVertices[i + 1], edgeVertices[i + 2]);
+        const endPoint = new THREE.Vector3(edgeVertices[i + 3], edgeVertices[i + 4], edgeVertices[i + 5]);
+
+        // Calcula la posición media para el cilindro
+        const midPoint = new THREE.Vector3().addVectors(startPoint, endPoint).multiplyScalar(0.5);
+
+        // Calcula la dirección y la longitud del cilindro
+        const direction = new THREE.Vector3().subVectors(endPoint, startPoint);
+        const length = direction.length();
+
+        // Crea el cilindro (línea) con el grosor definido
+        const cylinderGeometry = new THREE.CylinderGeometry(thickness, thickness, length, 32); // 32 es el número de segmentos del cilindro
+        const cylinder = new THREE.Mesh(cylinderGeometry, lineMaterial);
+        // Ajusta la posición y la orientación del cilindro
+        cylinder.position.copy(midPoint);
+        cylinder.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), direction.clone().normalize());
+
+        cube.add(cylinder);
+
+    }
+
+
+
+
+
     scene.add( cube );
 
     return cube;
 }
 
 
-function rotacion(cara){
-    const pos = 1.05;
-    const delta = Math.PI/2/30;
 
-    const c1 = cara[0];
-    const c2 = cara[1];
-    const c3 = cara[2];
-    const c4 = cara[3];
-    const c5 = cara[4];
-    const c6 = cara[5];
-    const c7 = cara[6];
-    const c8 = cara[7];
-    const c9 = cara[8];
-
-    if (cara === right) {
-        if (rotacionAcumuladaR < Math.PI / 2) {
-            rotarPuntoAlrededorOrigenR(c1, c1.position.x, c1.position.y, c1.position.z, delta)
-            rotarPuntoAlrededorOrigenR(c2, c2.position.x, c2.position.y, c2.position.z, delta)
-            rotarPuntoAlrededorOrigenR(c3, c3.position.x, c3.position.y, c3.position.z, delta)
-            rotarPuntoAlrededorOrigenR(c4, c4.position.x, c4.position.y, c4.position.z, delta)
-            rotarPuntoAlrededorOrigenR(c5, c5.position.x, c5.position.y, c5.position.z, delta)
-            rotarPuntoAlrededorOrigenR(c6, c6.position.x, c6.position.y, c6.position.z, delta)
-            rotarPuntoAlrededorOrigenR(c7, c7.position.x, c7.position.y, c7.position.z, delta)
-            rotarPuntoAlrededorOrigenR(c8, c8.position.x, c8.position.y, c8.position.z, delta)
-            rotarPuntoAlrededorOrigenR(c9, c9.position.x, c9.position.y, c9.position.z, delta)
-            rotacionAcumuladaR += delta;
-            requestAnimationFrame(() => rotacion(cara));
-        } else {
-            const theta = (vecesPresionadaR % 4) * Math.PI / 2;
-            rotarPuntoAlrededorOrigenR(c1, pos, pos, -pos, theta)
-            rotarPuntoAlrededorOrigenR(c2, pos, 0, -pos, theta)
-            rotarPuntoAlrededorOrigenR(c3, pos, -pos, -pos, theta)
-            rotarPuntoAlrededorOrigenR(c4, pos, pos, 0, theta)
-            rotarPuntoAlrededorOrigenR(c5, pos, 0, 0, theta)
-            rotarPuntoAlrededorOrigenR(c6, pos, -pos, 0, theta)
-            rotarPuntoAlrededorOrigenR(c7, pos, pos, pos, theta)
-            rotarPuntoAlrededorOrigenR(c8, pos, 0, pos, theta)
-            rotarPuntoAlrededorOrigenR(c9, pos, -pos, pos, theta)
-
-            c1.rotation.x = -theta;
-            c2.rotation.x = -theta;
-            c3.rotation.x = -theta;
-            c4.rotation.x = -theta;
-            c5.rotation.x = -theta;
-            c6.rotation.x = -theta;
-            c7.rotation.x = -theta;
-            c8.rotation.x = -theta;
-            c9.rotation.x = -theta;
-
-            rotacionAcumuladaR = 0;
-
-            //up
-            const up1 = up.indexOf(rfu);
-            const up3 = up.indexOf(ru);
-            const up2 = up.indexOf(rbu);
-            up[up1] = rfd;
-            up[up2] = rf;
-            up[up3] = rfu;
-
-            //down
-            const down1 = down.indexOf(rfd);
-            const down3 = down.indexOf(rd);
-            const down2 = down.indexOf(rbd);
-            down[down1] = rbd;
-            down[down2] = rb;
-            down[down3] = rbu;
-
-            //front
-            const front1 = front.indexOf(rfu);
-            const front3 = front.indexOf(rf);
-            const front2 = front.indexOf(rfd);
-            front[front1] = rfd;
-            front[front2] = rd;
-            front[front3] = rbd;
-
-            //back
-            const back1 = back.indexOf(rbu);
-            const back3 = back.indexOf(rb);
-            const back2 = back.indexOf(rbd);
-            back[back1] = rfu;
-            back[back2] = ru;
-            back[back3] = rbu;
-
-
+function getRight(){
+    const caras = [];
+    for (let cubo of cubos) {
+        if (cubo.position.x > 1) {
+            caras.push(cubo);
         }
     }
-    if (cara === left) {
-        if (rotacionAcumuladaL < Math.PI / 2) {
-            rotarPuntoAlrededorOrigenL(c1, c1.position.x, c1.position.y, c1.position.z, delta)
-            rotarPuntoAlrededorOrigenL(c2, c2.position.x, c2.position.y, c2.position.z, delta)
-            rotarPuntoAlrededorOrigenL(c3, c3.position.x, c3.position.y, c3.position.z, delta)
-            rotarPuntoAlrededorOrigenL(c4, c4.position.x, c4.position.y, c4.position.z, delta)
-            rotarPuntoAlrededorOrigenL(c5, c5.position.x, c5.position.y, c5.position.z, delta)
-            rotarPuntoAlrededorOrigenL(c6, c6.position.x, c6.position.y, c6.position.z, delta)
-            rotarPuntoAlrededorOrigenL(c7, c7.position.x, c7.position.y, c7.position.z, delta)
-            rotarPuntoAlrededorOrigenL(c8, c8.position.x, c8.position.y, c8.position.z, delta)
-            rotarPuntoAlrededorOrigenL(c9, c9.position.x, c9.position.y, c9.position.z, delta)
-            rotacionAcumuladaL += delta;
-            requestAnimationFrame(() => rotacion(cara));
-        } else {
-            const theta = (vecesPresionadaL % 4) * Math.PI / 2;
-            rotarPuntoAlrededorOrigenL(c1,-pos,pos,-pos, theta);
-            rotarPuntoAlrededorOrigenL(c2,-pos,0,-pos, theta);
-            rotarPuntoAlrededorOrigenL(c3,-pos,-pos,-pos, theta);
-            rotarPuntoAlrededorOrigenL(c4,-pos,pos,0, theta);
-            rotarPuntoAlrededorOrigenL(c5,-pos,0,0,theta);
-            rotarPuntoAlrededorOrigenL(c6,-pos,-pos,0, theta);
-            rotarPuntoAlrededorOrigenL(c7,-pos,pos,pos , theta);
-            rotarPuntoAlrededorOrigenL(c8,-pos,0,pos , theta);
-            rotarPuntoAlrededorOrigenL(c9,-pos,-pos,pos , theta);
-
-            c1.rotation.x = theta;
-            c2.rotation.x = theta;
-            c3.rotation.x = theta;
-            c4.rotation.x = theta;
-            c5.rotation.x = theta;
-            c6.rotation.x = theta;
-            c7.rotation.x = theta;
-            c8.rotation.x = theta;
-            c9.rotation.x = theta;
-
-            rotacionAcumuladaL = 0;
+    return caras;
+}
+function getLeft(){
+    const caras = [];
+    for (let cubo of cubos) {
+        if (cubo.position.x < -1) {
+            caras.push(cubo);
         }
     }
-    if (cara === up) {
-        if (rotacionAcumuladaU < 30) {
-            rotarPuntoAlrededorOrigenU(c1, c1.position.x, c1.position.y, c1.position.z, delta)
-            rotarPuntoAlrededorOrigenU(c2, c2.position.x, c2.position.y, c2.position.z, delta)
-            rotarPuntoAlrededorOrigenU(c3, c3.position.x, c3.position.y, c3.position.z, delta)
-            rotarPuntoAlrededorOrigenU(c4, c4.position.x, c4.position.y, c4.position.z, delta)
-            rotarPuntoAlrededorOrigenU(c5, c5.position.x, c5.position.y, c5.position.z, delta)
-            rotarPuntoAlrededorOrigenU(c6, c6.position.x, c6.position.y, c6.position.z, delta)
-            rotarPuntoAlrededorOrigenU(c7, c7.position.x, c7.position.y, c7.position.z, delta)
-            rotarPuntoAlrededorOrigenU(c8, c8.position.x, c8.position.y, c8.position.z, delta)
-            rotarPuntoAlrededorOrigenU(c9, c9.position.x, c9.position.y, c9.position.z, delta)
-            rotacionAcumuladaU ++;
-            requestAnimationFrame(() => rotacion(cara));
-        }  /*else {
-
-            const theta = (vecesPresionadaU % 4) * Math.PI / 2;
-
-            rotarPuntoAlrededorOrigenU(c1,pos,pos,pos, theta);
-            rotarPuntoAlrededorOrigenU(c2,0,pos,pos, theta);
-            rotarPuntoAlrededorOrigenU(c3,-pos,pos,-pos, theta);
-            rotarPuntoAlrededorOrigenU(c4,pos,pos,-pos, theta);
-            rotarPuntoAlrededorOrigenU(c5,-pos,pos,0,theta);
-            rotarPuntoAlrededorOrigenU(c6,0,pos,0, theta);
-            rotarPuntoAlrededorOrigenU(c7,pos,pos,0 , theta);
-            rotarPuntoAlrededorOrigenU(c8,0,pos,-pos , theta);
-            rotarPuntoAlrededorOrigenU(c9,-pos,pos,pos , theta);
-
-
-            // Aplicar la rotación a cada objeto c1, c2, ..., c9
-            c1.setRotationFromAxisAngle(new THREE.Vector3(0,1,0), -theta);
-            c2.setRotationFromAxisAngle(new THREE.Vector3(0,1,0), -theta);
-            c3.setRotationFromAxisAngle(new THREE.Vector3(0,1,0), -theta);
-            c4.setRotationFromAxisAngle(new THREE.Vector3(0,1,0), -theta);
-            c5.setRotationFromAxisAngle(new THREE.Vector3(0,1,0), -theta);
-            c6.setRotationFromAxisAngle(new THREE.Vector3(0,1,0), -theta);
-            c7.setRotationFromAxisAngle(new THREE.Vector3(0,1,0), -theta);
-            c8.setRotationFromAxisAngle(new THREE.Vector3(0,1,0), -theta);
-            c9.setRotationFromAxisAngle(new THREE.Vector3(0,1,0), -theta);
-
-
-
-            rotacionAcumuladaU = 0;
-
-
+    return caras;
+}
+function getUp(){
+    const caras = [];
+    for (let cubo of cubos) {
+        if (cubo.position.y > 1) {
+            caras.push(cubo);
         }
-        */
+    }
+    return caras;
+}
+function getDown(){
+    const caras = [];
+    for (let cubo of cubos) {
+        if (cubo.position.y < -1) {
+            caras.push(cubo);
+        }
+    }
+    return caras;
+}
+function getFront(){
+    const caras = [];
+    for (let cubo of cubos) {
+        if (cubo.position.z > 1) {
+            caras.push(cubo);
+        }
+    }
+    return caras;
+}
+function getBack(){
+    const caras = [];
+    for (let cubo of cubos) {
+        if (cubo.position.z < -1) {
+            caras.push(cubo);
+        }
+    }
+    return caras;
+}
+
+
+function rotateRight(cara){
+    const delta = Math.PI/60;
+    if (concha < 30) {
+        for (let cubo of cara){
+            rotarEnEjeX(cubo, -delta);
+        }
+        concha ++;
+        requestAnimationFrame(() => rotateRight(cara));
+    } else{
+        isRotating = false;
+        if (actionQueue.length > 0){
+            const nextAction = actionQueue.shift();
+            teclas(nextAction);
+        }
     }
 
-
+}
+function rotateLeft(cara){
+    const delta = Math.PI/60;
+    if (concha < 30) {
+        for (let cubo of cara){
+            rotarEnEjeX(cubo, delta);
+        }
+        concha ++;
+        requestAnimationFrame(() => rotateLeft(cara));
+    }else {
+        isRotating = false;
+        if (actionQueue.length > 0) {
+            const nextAction = actionQueue.shift();
+            teclas(nextAction);
+        }
+    }
+}
+function rotateUp(cara){
+    const delta = Math.PI/60;
+    if (concha < 30) {
+        for (let cubo of cara){
+            rotarEnEjeY(cubo, delta);
+        }
+        concha ++;
+        requestAnimationFrame(() => rotateUp(cara));
+    }else {
+        isRotating = false;
+        if (actionQueue.length > 0) {
+            const nextAction = actionQueue.shift();
+            teclas(nextAction);
+        }
+    }
+}
+function rotateDown(cara){
+    const delta = Math.PI/60;
+    if (concha < 30) {
+        for (let cubo of cara){
+            rotarEnEjeY(cubo, -delta);
+        }
+        concha ++;
+        requestAnimationFrame(() => rotateDown(cara));
+    }else {
+        isRotating = false;
+        if (actionQueue.length > 0) {
+            const nextAction = actionQueue.shift();
+            teclas(nextAction);
+        }
+    }
+}
+function rotateFront(cara){
+    const delta = Math.PI/60;
+    if (concha < 30) {
+        for (let cubo of cara){
+            rotarEnEjeZ(cubo, -delta);
+        }
+        concha ++;
+        requestAnimationFrame(() => rotateFront(cara));
+    }else {
+        isRotating = false;
+        if (actionQueue.length > 0) {
+            const nextAction = actionQueue.shift();
+            teclas(nextAction);
+        }
+    }
+}
+function rotateBack(cara){
+    const delta = Math.PI/60;
+    if (concha < 30) {
+        for (let cubo of cara){
+            rotarEnEjeZ(cubo, delta);
+        }
+        concha ++;
+        requestAnimationFrame(() => rotateBack(cara));
+    }else {
+        isRotating = false;
+        if (actionQueue.length > 0) {
+            const nextAction = actionQueue.shift();
+            teclas(nextAction);
+        }
+    }
 }
 
-function rotarPuntoAlrededorOrigenR(cubo, x, y, z, theta) {
+
+
+function rotateRightQuick(cara){
+    const delta = Math.PI/30;
+    if (concha < 15) {
+        for (let cubo of cara){
+            rotarEnEjeX(cubo, -delta);
+        }
+        concha ++;
+        requestAnimationFrame(() => rotateRightQuick(cara));
+    } else{
+        isRotating = false;
+        if (actionQueue.length > 0){
+            const nextAction = actionQueue.shift();
+            teclasQuick(nextAction);
+        }
+    }
+
+}
+function rotateLeftQuick(cara){
+    const delta = Math.PI/30;
+    if (concha < 15) {
+        for (let cubo of cara){
+            rotarEnEjeX(cubo, delta);
+        }
+        concha ++;
+        requestAnimationFrame(() => rotateLeftQuick(cara));
+    }else {
+        isRotating = false;
+        if (actionQueue.length > 0) {
+            const nextAction = actionQueue.shift();
+            teclasQuick(nextAction);
+        }
+    }
+}
+function rotateUpQuick(cara){
+    const delta = Math.PI/30;
+    if (concha < 15) {
+        for (let cubo of cara){
+            rotarEnEjeY(cubo, delta);
+        }
+        concha ++;
+        requestAnimationFrame(() => rotateUpQuick(cara));
+    }else {
+        isRotating = false;
+        if (actionQueue.length > 0) {
+            const nextAction = actionQueue.shift();
+            teclasQuick(nextAction);
+        }
+    }
+}
+function rotateDownQuick(cara){
+    const delta = Math.PI/30;
+    if (concha < 15) {
+        for (let cubo of cara){
+            rotarEnEjeY(cubo, -delta);
+        }
+        concha ++;
+        requestAnimationFrame(() => rotateDownQuick(cara));
+    }else {
+        isRotating = false;
+        if (actionQueue.length > 0) {
+            const nextAction = actionQueue.shift();
+            teclasQuick(nextAction);
+        }
+    }
+}
+function rotateFrontQuick(cara){
+    const delta = Math.PI/30;
+    if (concha < 15) {
+        for (let cubo of cara){
+            rotarEnEjeZ(cubo, -delta);
+        }
+        concha ++;
+        requestAnimationFrame(() => rotateFrontQuick(cara));
+    }else {
+        isRotating = false;
+        if (actionQueue.length > 0) {
+            const nextAction = actionQueue.shift();
+            teclasQuick(nextAction);
+        }
+    }
+}
+function rotateBackQuick(cara){
+    const delta = Math.PI/30;
+    if (concha < 15) {
+        for (let cubo of cara){
+            rotarEnEjeZ(cubo, delta);
+        }
+        concha ++;
+        requestAnimationFrame(() => rotateBackQuick(cara));
+    }else {
+        isRotating = false;
+        if (actionQueue.length > 0) {
+            const nextAction = actionQueue.shift();
+            teclasQuick(nextAction);
+        }
+    }
+}
+
+
+function rotarEnEjeX(cubo, theta) {
     cubo.position.set(
-        x,
-        y * Math.cos(-theta) - z * Math.sin(-theta),
-        y * Math.sin(-theta) + z * Math.cos(-theta)
-
-    );
-    cubo.rotation.x -= theta;
-}
-function rotarPuntoAlrededorOrigenL(cubo, x, y, z, theta) {
-    cubo.position.set(
-        x,
-        y * Math.cos(theta) - z * Math.sin(theta),
-        y * Math.sin(theta) + z * Math.cos(theta));
-    cubo.rotation.x += theta;
+        cubo.position.x,
+        cubo.position.y * Math.cos(theta) - cubo.position.z * Math.sin(theta),
+        cubo.position.y * Math.sin(theta) + cubo.position.z * Math.cos(theta));
+    cubo.rotateOnWorldAxis(new THREE.Vector3(1,0,0),theta)
 }
 
-function rotarPuntoAlrededorOrigenU(cubo, x, y, z, theta) {
+function rotarEnEjeY(cubo, theta) {
+    console.log("rotarEnEjeY");
     cubo.position.set(
-        x * Math.cos(theta) - z * Math.sin(theta),
-        y,
-        x * Math.sin(theta) + z * Math.cos(theta));
-    cubo.rotateOnWorldAxis(new THREE.Vector3(0,1,0),-theta);
+        cubo.position.x * Math.cos(theta) - cubo.position.z * Math.sin(theta),
+        cubo.position.y,
+        cubo.position.x * Math.sin(theta) + cubo.position.z * Math.cos(theta));
+    cubo.rotateOnWorldAxis(new THREE.Vector3(0,1,0),-theta)
 }
+function rotarEnEjeZ(cubo, theta) {
+    cubo.position.set(
+        cubo.position.x * Math.cos(theta) - cubo.position.y * Math.sin(theta),
+        cubo.position.x * Math.sin(theta) + cubo.position.y * Math.cos(theta),
+        cubo.position.z);
+    cubo.rotateOnWorldAxis(new THREE.Vector3(0,0,1),theta)
+}
+
 
 
 function onWindowResize() {
@@ -485,10 +575,6 @@ function onWindowResize() {
 
 function animate(){
     requestAnimationFrame(animate);
-    render();
-}
-
-function render(){
     controls.update();
     renderer.render(scene, camera);
 }

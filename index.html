@@ -5,9 +5,67 @@
     <title>rubiks_cube</title>
     <style>
         body { margin: 0; }
+
+        .shuffle-design {
+            position: fixed; /* Fijar posición */
+            top: 260px; /* 20px desde la parte inferior */
+            left: 150px; /* 20px desde la parte derecha */
+            width: 90px; /* Diámetro del botón */
+            height: 90px; /* Diámetro del botón */
+            border-radius: 50%; /* Hacerlo circular */
+            background-color: white; /* Color de fondo blanco */
+            border: none; /* Sin borde */
+            cursor: pointer; /* Cambia el cursor al pasar sobre él */
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1); /* Sombra suave */
+        }
+
+        /* Estilos para la imagen dentro del botón */
+
+        .shuffle-design img {
+            width: 90px; /* Ajusta el tamaño de la imagen */
+            height: 90px; /* Ajusta el tamaño de la imagen */
+            position: absolute; /* Posición absoluta para la imagen */
+            top: 50%; /* Posiciona la imagen en el centro verticalmente */
+            left: 50%; /* Posiciona la imagen en el centro horizontalmente */
+            transform: translate(-50%, -50%); /* Centra la imagen */
+        }
+
+        .circular-button {
+            position: fixed; /* Fijar posición */
+            bottom: 13px; /* 20px desde la parte inferior */
+            right: 13px; /* 20px desde la parte derecha */
+            width: 38px; /* Diámetro del botón */
+            height: 38px; /* Diámetro del botón */
+            border-radius: 50%; /* Hacerlo circular */
+            background-color: white; /* Color de fondo blanco */
+            border: none; /* Sin borde */
+            cursor: pointer; /* Cambia el cursor al pasar sobre él */
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1); /* Sombra suave */
+        }
+
+        /* Estilos para la imagen dentro del botón */
+        .circular-button img {
+            width: 20px; /* Ajusta el tamaño de la imagen */
+            height: 20px; /* Ajusta el tamaño de la imagen */
+            position: absolute; /* Posición absoluta para la imagen */
+            top: 50%; /* Posiciona la imagen en el centro verticalmente */
+            left: 50%; /* Posiciona la imagen en el centro horizontalmente */
+            transform: translate(-50%, -50%); /* Centra la imagen */
+        }
     </style>
 </head>
 <body>
-    <script type="module" src="main.js"></script>
+<button id="btnMezclar" class="shuffle-design">
+    <img src="./public/shuffle.svg" title="Mezclar" alt="Mezclar">
+</button>
+<button id="myButton" class="circular-button">
+    <img src="./public/ic_code_black_24dp.svg" alt="Imagen personalizada">
+</button>
+<script>
+    document.getElementById('myButton').addEventListener('click', function() {
+        window.location.href = 'https://github.com/mathyrolando/rubiks_cube'; // Reemplaza 'tu_enlace.html' con tu URL deseada
+    });
+</script>
+    <script type="module" src="./main.js"></script>
 </body>
 </html>
